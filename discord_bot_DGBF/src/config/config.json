@@ -1,0 +1,17 @@
+{
+  "jailRole": "JAIL",
+  "staffRole": "Staff",
+  "logChannels": {
+    "message": "logs-message",
+    "sanction": "logs-sanction",
+    "ticket": "logs-ticket",
+    "eco": "logs-economie"
+  },
+  "xp": {
+    "min": 10,
+    "max": 50
+  },
+  "owners": [
+    "YOUR_ID"
+  ]
+}
