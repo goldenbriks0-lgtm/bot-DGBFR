@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('fs');
@@ -18,27 +17,47 @@ const client = new Client({
 client.commands = new Collection();
 client.db = new PrismaClient();
 
-// load commands (recursive)
+
+// ✅ LOAD COMMANDS (FIXED)
 function loadCommands(dir) {
   const files = fs.readdirSync(dir);
+
   for (const file of files) {
-    const full = path.join(dir, file);
-    if (fs.lstatSync(full).isDirectory()) {
-      loadCommands(full);
+    const fullPath = path.join(dir, file);
+
+    if (fs.lstatSync(fullPath).isDirectory()) {
+      loadCommands(fullPath);
     } else if (file.endsWith(".js")) {
-      const cmd = require(full);
-      client.commands.set(cmd.data.name, cmd);
+      try {
+        const command = require(path.resolve(fullPath)); // 🔥 FIX IMPORTANT
+        if (command.data && command.data.name) {
+          client.commands.set(command.data.name, command);
+        }
+      } catch (err) {
+        console.error("Erreur chargement commande :", fullPath, err);
+      }
     }
   }
 }
-loadCommands("./src/commands");
 
-// load events
-const eventFiles = fs.readdirSync("./src/events");
+loadCommands(path.join(__dirname, "src", "commands"));
+
+
+// ✅ LOAD EVENTS (FIXED)
+const eventsPath = path.join(__dirname, "src", "events");
+const eventFiles = fs.readdirSync(eventsPath);
+
 for (const file of eventFiles) {
-  const event = require(`./src/events/${file}`);
-  const name = file.split(".")[0];
-  client.on(name, event.bind(null, client));
+  try {
+    const event = require(path.join(eventsPath, file));
+    const eventName = file.split(".")[0];
+
+    client.on(eventName, event.bind(null, client));
+  } catch (err) {
+    console.error("Erreur event :", file, err);
+  }
 }
 
+
+// ✅ LOGIN
 client.login(process.env.TOKEN);
